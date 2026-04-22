@@ -48,3 +48,22 @@ export async function vincular_componente_a_proyecto(id_proyecto: string, id_com
     const datos_vinculacion = await respuesta.json();
     return datos_vinculacion;
 }
+
+export async function validar_proyecto(id_proyecto: string) {
+    const url_base = process.env.url_api_base;
+    
+    if (!url_base) {
+        throw new Error("error critico: url de la api no definida");
+    }
+    
+    const respuesta = await fetch(`${url_base}/projects/${id_proyecto}/validation`, {
+        method: "GET"
+    });
+    
+    if (!respuesta.ok) {
+        throw new Error("error del servidor al intentar validar el proyecto");
+    }
+    
+    const datos_validacion = await respuesta.json();
+    return datos_validacion;
+}
