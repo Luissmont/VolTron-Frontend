@@ -8,6 +8,10 @@ interface resultado_validacion_tipo {
     total_draw_ma: number;
     total_supply_ma: number;
     is_overloaded: boolean;
+    remaining_ma: number;
+    voltage_status: string;
+    is_critical_margin: boolean;
+    brain_name: string;
 }
 
 export default function MesaEnsamblaje() {
@@ -57,7 +61,11 @@ export default function MesaEnsamblaje() {
             set_resultado_validacion({
                 total_draw_ma: datos_reales.total_consumed_ma || 0,
                 total_supply_ma: datos_reales.total_available_ma || 0,
-                is_overloaded: datos_reales.is_overloaded || false
+                is_overloaded: datos_reales.is_overloaded || false,
+                remaining_ma: datos_reales.remaining_ma || 0,
+                voltage_status: datos_reales.voltage_status || "SIN_DATOS",
+                is_critical_margin: datos_reales.is_critical_margin || false,
+                brain_name: datos_reales.brain_name || "Desconocido"
             });
         } catch (error) {
             console.error("error en procesamiento:", error);
@@ -131,18 +139,57 @@ export default function MesaEnsamblaje() {
                         </div>
 
                         <div className="bg-shadow-grey border border-iron-grey p-4">
-                            <h3 className="text-sm uppercase tracking-widest text-slate-grey font-bold mb-3">Estado Electrico</h3>
+                            <h3 className="text-sm uppercase tracking-widest text-slate-grey font-bold mb-3 border-b border-iron-grey pb-2">Diagnostico del Sistema</h3>
+                            
+                            {resultado_validacion && (
+                                <div className="mb-4 space-y-2 text-sm text-pale-slate-dark bg-gunmetal p-3 border border-iron-grey">
+                                    <p className="flex justify-between">
+                                        <span className="font-semibold text-slate-grey uppercase tracking-wider text-xs">Cerebro Principal:</span> 
+                                        <span className="text-bright-snow font-medium">{resultado_validacion.brain_name}</span>
+                                    </p>
+                                    <p className="flex justify-between">
+                                        <span className="font-semibold text-slate-grey uppercase tracking-wider text-xs">Estado de Voltaje:</span> 
+                                        <span className={resultado_validacion.voltage_status === 'OK' ? 'text-green-500' : 'text-[#721c24] font-bold'}>
+                                            {resultado_validacion.voltage_status}
+                                        </span>
+                                    </p>
+                                    <p className="flex justify-between">
+                                        <span className="font-semibold text-slate-grey uppercase tracking-wider text-xs">Corriente Restante:</span> 
+                                        <span className="text-platinum">{resultado_validacion.remaining_ma} mA</span>
+                                    </p>
+                                </div>
+                            )}
+
                             <div className="w-full bg-gunmetal h-4 mb-2 border border-iron-grey">
-                                <div className={`h-full ${esta_sobrecargado ? 'bg-[#721c24]' : 'bg-platinum'}`} style={{ width: `${ancho_barra}%` }}></div>
+                                <div 
+                                    className={`h-full ${
+                                        esta_sobrecargado ? 'bg-[#721c24]' : 
+                                        (resultado_validacion?.is_critical_margin ? 'bg-yellow-600' : 'bg-platinum')
+                                    }`} 
+                                    style={{ width: `${ancho_barra}%` }}
+                                ></div>
                             </div>
                             
                             {esta_sobrecargado && (
-                                <p className="text-[#721c24] font-bold text-xs uppercase tracking-widest mt-2 mb-2">
-                                    SOBRECARGA DETECTADA
-                                </p>
+                                <div className="mt-2 mb-2 p-2 bg-[#721c24] bg-opacity-20 border border-[#721c24]">
+                                    <p className="text-[#721c24] font-bold text-xs uppercase tracking-widest text-center">
+                                        PELIGRO: SOBRECARGA DETECTADA
+                                    </p>
+                                    <p className="text-pale-slate-light text-xs text-center mt-1">
+                                        El consumo excede el limite. Riesgo de quemar el componente.
+                                    </p>
+                                </div>
+                            )}
+
+                            {resultado_validacion?.is_critical_margin && !esta_sobrecargado && (
+                                <div className="mt-2 mb-2 p-2 bg-yellow-600 bg-opacity-20 border border-yellow-600">
+                                    <p className="text-yellow-500 font-bold text-xs uppercase tracking-widest text-center">
+                                        ADVERTENCIA: MARGEN CRITICO
+                                    </p>
+                                </div>
                             )}
                             
-                            <p className="text-xs text-pale-slate-dark text-right">{consumo} mA / {suministro} mA Suministrados</p>
+                            <p className="text-xs text-pale-slate-dark text-right mt-2">{consumo} mA / {suministro} mA Suministrados</p>
 
                             <button 
                                 type="button"
