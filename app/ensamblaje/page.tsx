@@ -70,7 +70,7 @@ export default function MesaEnsamblaje() {
     const procesar_circuito = async (evento: any) => {
         evento.preventDefault();
         set_error_sistema(null);
-        
+
         if (piezas_proyecto.length === 0) {
             set_error_sistema("El circuito esta vacio. Agrega piezas antes de validar.");
             return;
@@ -93,7 +93,7 @@ export default function MesaEnsamblaje() {
         try {
             const proyecto_nuevo = await crear_proyecto_vacio("proyecto_ensamblaje", "proyecto generado desde la mesa");
             const id_proyecto = proyecto_nuevo.project_id;
-            
+
             if (!id_proyecto) throw new Error("falla de identificacion");
 
             for (const pieza of piezas_proyecto) {
@@ -122,7 +122,7 @@ export default function MesaEnsamblaje() {
     const consumo = resultado_validacion ? resultado_validacion.total_draw_ma : 0;
     const suministro = resultado_validacion ? resultado_validacion.total_supply_ma : 0;
     let ancho_barra = 0;
-    
+
     if (suministro > 0) {
         ancho_barra = (consumo / suministro) * 100;
         if (ancho_barra > 100) ancho_barra = 100;
@@ -131,7 +131,7 @@ export default function MesaEnsamblaje() {
     const esta_sobrecargado = resultado_validacion ? resultado_validacion.is_overloaded : false;
     let color_diagnostico = "bg-gunmetal";
     let texto_diagnostico = "text-bright-snow";
-    
+
     if (resultado_validacion) {
         if (esta_sobrecargado || resultado_validacion.voltage_status !== "OK") {
             color_diagnostico = "bg-[#721c24]";
@@ -159,21 +159,21 @@ export default function MesaEnsamblaje() {
                 </header>
 
                 {error_sistema && (
-                    <div className="w-full bg-[#721c24] text-white p-4 mb-6 border border-red-500 flex justify-between items-center">
+                    <div className="w-full bg-red-900/30 text-red-400 p-4 mb-6 border border-red-500/40 rounded-xl flex justify-between items-center">
                         <p className="font-semibold">{error_sistema}</p>
-                        <button onClick={() => set_error_sistema(null)} className="text-xl font-bold hover:text-gray-300">X</button>
+                        <button onClick={() => set_error_sistema(null)} className="text-xl font-bold hover:text-red-300 transition-colors">X</button>
                     </div>
                 )}
 
                 <div className="flex flex-col lg:flex-row gap-8">
-                    <section className="w-full lg:w-1/2 bg-gunmetal border border-iron-grey p-6 rounded-sm">
+                    <section className="w-full lg:w-1/2 bg-gunmetal border border-iron-grey/60 p-6 rounded-xl shadow-lg">
                         <h2 className="text-xl font-bold text-platinum mb-6">Inventario Disponible</h2>
                         {cargando ? (
                             <p className="text-pale-slate-dark">Cargando piezas</p>
                         ) : (
                             <div className="flex flex-col space-y-3 max-h-[800px] overflow-y-auto pr-2">
                                 {catalogo_disponible.map((pieza) => (
-                                    <div key={pieza.id} className="flex justify-between items-center bg-shadow-grey border border-iron-grey p-3">
+                                    <div key={pieza.id} className="flex justify-between items-center bg-shadow-grey/60 border border-iron-grey/50 p-3 rounded-xl hover:border-iron-grey transition-all duration-200">
                                         <div>
                                             <p className="font-semibold text-bright-snow">{pieza.name}</p>
                                             <p className="text-xs text-pale-slate-dark uppercase tracking-wide">{pieza.category}</p>
@@ -181,7 +181,7 @@ export default function MesaEnsamblaje() {
                                         <button
                                             type="button"
                                             onClick={() => agregar_pieza(pieza)}
-                                            className="bg-iron-grey hover:bg-slate-grey text-white text-sm font-bold py-1 px-4 transition-colors"
+                                            className="bg-iron-grey hover:bg-slate-grey text-white text-sm font-bold py-1 px-4 transition-all duration-200 rounded-lg cursor-pointer"
                                         >
                                             + Agregar
                                         </button>
@@ -191,7 +191,7 @@ export default function MesaEnsamblaje() {
                         )}
                     </section>
 
-                    <section className="w-full lg:w-1/2 bg-gunmetal border border-iron-grey p-6 rounded-sm flex flex-col">
+                    <section className="w-full lg:w-1/2 bg-gunmetal border border-iron-grey/60 p-6 rounded-xl shadow-lg flex flex-col">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold text-platinum">Proyecto Actual</h2>
                             <button onClick={limpiar_proyecto} className="text-xs text-slate-grey hover:text-white uppercase tracking-widest font-bold border border-slate-grey px-2 py-1">
@@ -217,7 +217,7 @@ export default function MesaEnsamblaje() {
                                                             <span className="text-slate-grey text-xs">
                                                                 {pieza.current_draw_ma > 0 ? `${pieza.current_draw_ma} mA` : 'Base'}
                                                             </span>
-                                                            <button 
+                                                            <button
                                                                 type="button"
                                                                 onClick={() => quitar_pieza(pieza.id)}
                                                                 className="text-slate-grey hover:text-[#721c24] font-bold text-xs"
@@ -236,45 +236,48 @@ export default function MesaEnsamblaje() {
 
                         <div className="bg-shadow-grey border border-iron-grey p-4">
                             <h3 className="text-sm uppercase tracking-widest text-slate-grey font-bold mb-3 border-b border-iron-grey pb-2">Diagnostico del Sistema</h3>
-                            
+
                             {resultado_validacion && (
                                 <>
                                     <div className="mb-4 space-y-2 text-sm text-pale-slate-dark bg-gunmetal p-3 border border-iron-grey">
                                         <p className="flex justify-between">
-                                            <span className="font-semibold text-slate-grey uppercase tracking-wider text-xs">Cerebro Principal:</span> 
+                                            <span className="font-semibold text-slate-grey uppercase tracking-wider text-xs">Cerebro Principal:</span>
                                             <span className="text-bright-snow font-medium">{resultado_validacion.brain_name}</span>
                                         </p>
                                         <p className="flex justify-between">
-                                            <span className="font-semibold text-slate-grey uppercase tracking-wider text-xs">Corriente Restante:</span> 
+                                            <span className="font-semibold text-slate-grey uppercase tracking-wider text-xs">Corriente Restante:</span>
                                             <span className="text-platinum">{resultado_validacion.remaining_ma} mA</span>
                                         </p>
                                     </div>
 
-                                    <div className={`p-4 mb-4 border ${color_diagnostico}`}>
-                                        <p className={`font-semibold text-sm ${texto_diagnostico}`}>
+                                    <div className={`p-4 mb-4 border rounded-xl ${
+                                        esta_sobrecargado || resultado_validacion.voltage_status !== "OK"
+                                            ? 'bg-red-900/30 border-red-500/50 text-red-400'
+                                            : 'bg-green-900/30 border-green-500/50 text-green-400'
+                                    }`}>
+                                        <p className="font-semibold text-sm">
                                             {obtener_mensaje_humano(resultado_validacion.voltage_status, esta_sobrecargado)}
                                         </p>
                                     </div>
                                 </>
                             )}
 
-                            <div className="w-full bg-gunmetal h-4 mb-2 border border-iron-grey">
-                                <div 
-                                    className={`h-full ${
-                                        esta_sobrecargado ? 'bg-[#721c24]' : 
-                                        (resultado_validacion?.is_critical_margin ? 'bg-yellow-600' : 'bg-platinum')
-                                    }`} 
+                            <div className="w-full bg-shadow-grey/60 h-3 mb-2 border border-iron-grey/40 rounded-full overflow-hidden">
+                                <div
+                                    className={`h-full transition-all duration-500 ease-in-out ${esta_sobrecargado ? 'bg-red-600' :
+                                            (resultado_validacion?.is_critical_margin ? 'bg-yellow-500' : 'bg-platinum')
+                                        }`}
                                     style={{ width: `${ancho_barra}%` }}
                                 ></div>
                             </div>
-                            
+
                             <p className="text-xs text-pale-slate-dark text-right mt-2">{consumo} mA / {suministro} mA Suministrados</p>
 
-                            <button 
+                            <button
                                 type="button"
                                 onClick={procesar_circuito}
                                 disabled={procesando || piezas_proyecto.length === 0}
-                                className="w-full mt-4 bg-iron-grey hover:bg-slate-grey disabled:opacity-50 disabled:cursor-not-allowed text-bright-snow font-bold py-3 transition-colors"
+                                className="w-full mt-4 bg-iron-grey hover:bg-slate-grey disabled:opacity-40 disabled:cursor-not-allowed text-bright-snow font-bold py-3 transition-all duration-200 rounded-xl cursor-pointer"
                             >
                                 {procesando ? 'Validando Base de Datos...' : 'Validar Circuito'}
                             </button>

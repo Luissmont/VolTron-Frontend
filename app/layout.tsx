@@ -29,23 +29,23 @@ export default function RootLayout({
       </head>
       <body className="bg-shadow-grey text-bright-snow font-sans min-h-screen flex flex-col antialiased">
 
-        <nav className="bg-gunmetal border-b border-iron-grey sticky top-0 z-50 shadow-sm">
+        <nav className="bg-gunmetal/80 backdrop-blur-md border-b border-iron-grey/50 sticky top-0 z-50 shadow-lg">
           <div className="max-w-screen-2xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
 
-            <Link href="/" className="text-xl font-bold text-platinum tracking-wide hover:text-white transition-colors">
+            <Link href="/" className="text-xl font-bold text-platinum tracking-wide hover:text-white transition-all duration-300">
               VolTron
             </Link>
 
             <div className="flex space-x-8 text-sm font-semibold text-pale-slate-dark items-center">
               <Link
                 href="/"
-                className="hover:text-bright-snow transition-colors"
+                className="hover:text-white transition-all duration-300"
               >
                 Taller
               </Link>
               <Link
                 href="/ensamblaje"
-                className="hover:text-bright-snow transition-colors"
+                className="hover:text-white transition-all duration-300"
               >
                 Mesa de Ensamblaje
               </Link>
@@ -54,10 +54,10 @@ export default function RootLayout({
                 {!token_sesion ? (
                   <>
                     <span className="text-xs font-bold text-slate-grey">[Modo Invitado]</span>
-                    <Link href="/auth/login" className="hover:text-bright-snow transition-colors">
+                    <Link href="/auth/login" className="hover:text-white transition-all duration-300">
                       Entrar
                     </Link>
-                    <Link href="/auth/registro" className="hover:text-bright-snow transition-colors">
+                    <Link href="/auth/registro" className="hover:text-white transition-all duration-300">
                       Crear Cuenta
                     </Link>
                   </>
