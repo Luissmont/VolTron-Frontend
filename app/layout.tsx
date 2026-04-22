@@ -29,51 +29,67 @@ export default function RootLayout({
       </head>
       <body className="bg-shadow-grey text-bright-snow font-sans min-h-screen flex flex-col antialiased">
 
-        <nav className="bg-gunmetal/80 backdrop-blur-md border-b border-iron-grey/50 sticky top-0 z-50 shadow-lg">
-          <div className="max-w-screen-2xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
+        <div className="sticky top-0 z-50 px-4 pt-4 pb-2">
+          <nav className="max-w-screen-xl mx-auto bg-gunmetal/70 backdrop-blur-xl border border-iron-grey/30 rounded-2xl shadow-2xl px-6 h-14 flex items-center justify-between gap-6">
 
-            <Link href="/" className="text-xl font-bold text-platinum tracking-wide hover:text-white transition-all duration-300">
-              VolTron
+            <Link href="/" className="flex items-center gap-2 shrink-0">
+              <span className="text-lg font-black text-white tracking-widest uppercase">
+                Vol<span className="text-slate-grey">Tron</span>
+              </span>
             </Link>
 
-            <div className="flex space-x-8 text-sm font-semibold text-pale-slate-dark items-center">
+            <div className="flex items-center gap-1 bg-shadow-grey/50 border border-iron-grey/30 rounded-xl px-2 py-1">
               <Link
                 href="/"
-                className="hover:text-white transition-all duration-300"
+                className="px-4 py-1.5 text-xs font-semibold text-pale-slate-dark hover:text-white hover:bg-iron-grey/60 rounded-lg transition-all duration-200"
               >
                 Taller
               </Link>
               <Link
                 href="/ensamblaje"
-                className="hover:text-white transition-all duration-300"
+                className="px-4 py-1.5 text-xs font-semibold text-pale-slate-dark hover:text-white hover:bg-iron-grey/60 rounded-lg transition-all duration-200"
               >
                 Mesa de Ensamblaje
               </Link>
-
-              <div className="flex items-center ml-4 pl-4 border-l border-iron-grey gap-4">
-                {!token_sesion ? (
-                  <>
-                    <span className="text-xs font-bold text-slate-grey">[Modo Invitado]</span>
-                    <Link href="/auth/login" className="hover:text-white transition-all duration-300">
-                      Entrar
-                    </Link>
-                    <Link href="/auth/registro" className="hover:text-white transition-all duration-300">
-                      Crear Cuenta
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-xs font-bold text-green-500">[Modo Ingeniero]</span>
-                    <button type="button" onClick={cerrar_sesion} className="hover:text-[#721c24] transition-colors font-bold">
-                      Cerrar Sesion
-                    </button>
-                  </>
-                )}
-              </div>
             </div>
 
-          </div>
-        </nav>
+            <div className="flex items-center gap-3 shrink-0">
+              {!token_sesion ? (
+                <>
+                  <span className="text-xs font-mono text-iron-grey hidden sm:block">
+                    Sin sesion
+                  </span>
+                  <Link
+                    href="/auth/login"
+                    className="px-4 py-1.5 text-xs font-semibold text-pale-slate-dark hover:text-white border border-iron-grey/40 hover:border-iron-grey rounded-lg transition-all duration-200"
+                  >
+                    Entrar
+                  </Link>
+                  <Link
+                    href="/auth/registro"
+                    className="px-4 py-1.5 text-xs font-bold text-shadow-grey bg-platinum hover:bg-white rounded-lg transition-all duration-200"
+                  >
+                    Registrarse
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <span className="text-xs font-mono text-green-400 bg-green-900/20 border border-green-500/30 px-3 py-1 rounded-lg">
+                    Ingeniero
+                  </span>
+                  <button
+                    type="button"
+                    onClick={cerrar_sesion}
+                    className="px-4 py-1.5 text-xs font-semibold text-slate-grey hover:text-red-400 border border-iron-grey/30 hover:border-red-500/40 rounded-lg transition-all duration-200"
+                  >
+                    Salir
+                  </button>
+                </>
+              )}
+            </div>
+
+          </nav>
+        </div>
         <div className="flex-grow">
           {children}
         </div>
