@@ -35,14 +35,14 @@ export default function MesaEnsamblaje() {
         set_piezas_proyecto([...piezas_proyecto, pieza_nueva]);
     };
 
-    const procesar_circuito = async () => {
+    const procesar_circuito = async (evento: any) => {
+        evento.preventDefault();
         if (piezas_proyecto.length === 0) return;
         set_procesando(true);
 
         try {
             const proyecto_nuevo = await crear_proyecto_vacio("proyecto_ensamblaje", "proyecto generado desde la mesa");
-            console.log("payload_del_backend:", proyecto_nuevo);
-            const id_proyecto = proyecto_nuevo.id || proyecto_nuevo.project_id;
+            const id_proyecto = proyecto_nuevo.project_id;
             
             if (!id_proyecto) throw new Error("no se pudo extraer el id del proyecto");
 
@@ -51,10 +51,13 @@ export default function MesaEnsamblaje() {
             }
 
             const validacion = await validar_proyecto(id_proyecto);
+            
+            const datos_reales = Array.isArray(validacion) ? validacion[0] : validacion;
+
             set_resultado_validacion({
-                total_draw_ma: validacion.total_draw_ma,
-                total_supply_ma: validacion.total_supply_ma,
-                is_overloaded: validacion.is_overloaded
+                total_draw_ma: datos_reales.total_consumed_ma || 0,
+                total_supply_ma: datos_reales.total_available_ma || 0,
+                is_overloaded: datos_reales.is_overloaded || false
             });
         } catch (error) {
             console.error("error en procesamiento:", error);
@@ -142,6 +145,7 @@ export default function MesaEnsamblaje() {
                             <p className="text-xs text-pale-slate-dark text-right">{consumo} mA / {suministro} mA Suministrados</p>
 
                             <button 
+                                type="button"
                                 onClick={procesar_circuito}
                                 disabled={procesando || piezas_proyecto.length === 0}
                                 className="w-full mt-4 bg-iron-grey hover:bg-slate-grey disabled:opacity-50 disabled:cursor-not-allowed text-bright-snow font-bold py-3 transition-colors"
