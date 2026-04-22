@@ -14,12 +14,21 @@ interface resultado_validacion_tipo {
     brain_name: string;
 }
 
+const obtener_mensaje_humano = (status: string, sobrecarga: boolean) => {
+    if (sobrecarga) return "Corriente excedida. Agrega una fuente de poder externa o quita actuadores.";
+    if (status === "VOLTAGE_TOO_LOW") return "Incompatibilidad: Tus componentes requieren 5V pero tu cerebro opera a voltaje menor. Los sensores podrian no funcionar.";
+    if (status === "VOLTAGE_TOO_HIGH") return "Peligro: Estas enviando senales de voltaje alto a un cerebro de bajo voltaje. Lo vas a quemar.";
+    if (status === "OK" && !sobrecarga) return "Circuito estable y seguro para ensamblaje fisico.";
+    return "Faltan datos para un diagnostico completo.";
+};
+
 export default function MesaEnsamblaje() {
     const [catalogo_disponible, set_catalogo_disponible] = useState<componente_catalogo[]>([]);
     const [piezas_proyecto, set_piezas_proyecto] = useState<componente_catalogo[]>([]);
     const [cargando, set_cargando] = useState(true);
     const [procesando, set_procesando] = useState(false);
     const [resultado_validacion, set_resultado_validacion] = useState<resultado_validacion_tipo | null>(null);
+    const [error_sistema, set_error_sistema] = useState<string | null>(null);
 
     useEffect(() => {
         async function cargar_datos() {
@@ -27,7 +36,7 @@ export default function MesaEnsamblaje() {
                 const datos = await obtener_catalogo();
                 set_catalogo_disponible(datos);
             } catch (error) {
-                
+                set_error_sistema("No se pudo conectar con el inventario del servidor.");
             } finally {
                 set_cargando(false);
             }
@@ -37,25 +46,61 @@ export default function MesaEnsamblaje() {
 
     const agregar_pieza = (pieza_nueva: componente_catalogo) => {
         set_piezas_proyecto([...piezas_proyecto, pieza_nueva]);
+        set_error_sistema(null);
+        set_resultado_validacion(null);
+    };
+
+    const limpiar_proyecto = () => {
+        set_piezas_proyecto([]);
+        set_error_sistema(null);
+        set_resultado_validacion(null);
+    };
+
+    const quitar_pieza = (id_eliminar: string) => {
+        const indice = piezas_proyecto.findIndex(p => p.id === id_eliminar);
+        if (indice !== -1) {
+            const nuevas_piezas = [...piezas_proyecto];
+            nuevas_piezas.splice(indice, 1);
+            set_piezas_proyecto(nuevas_piezas);
+            set_error_sistema(null);
+            set_resultado_validacion(null);
+        }
     };
 
     const procesar_circuito = async (evento: any) => {
         evento.preventDefault();
-        if (piezas_proyecto.length === 0) return;
+        set_error_sistema(null);
+        
+        if (piezas_proyecto.length === 0) {
+            set_error_sistema("El circuito esta vacio. Agrega piezas antes de validar.");
+            return;
+        }
+
+        let contador_cerebros = 0;
+        for (const pieza of piezas_proyecto) {
+            if (pieza.category.toUpperCase() === "CEREBRO") {
+                contador_cerebros++;
+            }
+        }
+
+        if (contador_cerebros > 1) {
+            set_error_sistema("Error de diseno: Un circuito estandar solo puede tener 1 cerebro principal.");
+            return;
+        }
+
         set_procesando(true);
 
         try {
             const proyecto_nuevo = await crear_proyecto_vacio("proyecto_ensamblaje", "proyecto generado desde la mesa");
             const id_proyecto = proyecto_nuevo.project_id;
             
-            if (!id_proyecto) throw new Error("no se pudo extraer el id del proyecto");
+            if (!id_proyecto) throw new Error("falla de identificacion");
 
             for (const pieza of piezas_proyecto) {
                 await vincular_componente_a_proyecto(id_proyecto, pieza.id);
             }
 
             const validacion = await validar_proyecto(id_proyecto);
-            
             const datos_reales = Array.isArray(validacion) ? validacion[0] : validacion;
 
             set_resultado_validacion({
@@ -68,8 +113,7 @@ export default function MesaEnsamblaje() {
                 brain_name: datos_reales.brain_name || "Desconocido"
             });
         } catch (error) {
-            console.error("error en procesamiento:", error);
-            alert("Ocurrio un error, revisa la consola");
+            set_error_sistema("Ocurrio un error de conexion al validar en el backend.");
         } finally {
             set_procesando(false);
         }
@@ -85,6 +129,26 @@ export default function MesaEnsamblaje() {
     }
 
     const esta_sobrecargado = resultado_validacion ? resultado_validacion.is_overloaded : false;
+    let color_diagnostico = "bg-gunmetal";
+    let texto_diagnostico = "text-bright-snow";
+    
+    if (resultado_validacion) {
+        if (esta_sobrecargado || resultado_validacion.voltage_status !== "OK") {
+            color_diagnostico = "bg-[#721c24]";
+            texto_diagnostico = "text-white";
+        } else {
+            color_diagnostico = "bg-[#0f5132]";
+            texto_diagnostico = "text-white";
+        }
+    }
+
+    const piezas_agrupadas = piezas_proyecto.reduce((acumulador, pieza) => {
+        if (!acumulador[pieza.category]) {
+            acumulador[pieza.category] = [];
+        }
+        acumulador[pieza.category].push(pieza);
+        return acumulador;
+    }, {} as Record<string, componente_catalogo[]>);
 
     return (
         <main className="min-h-screen bg-shadow-grey text-bright-snow p-4 md:p-8 font-sans">
@@ -94,14 +158,20 @@ export default function MesaEnsamblaje() {
                     <p className="text-slate-grey mt-1">Construye y valida tu circuito robotico.</p>
                 </header>
 
+                {error_sistema && (
+                    <div className="w-full bg-[#721c24] text-white p-4 mb-6 border border-red-500 flex justify-between items-center">
+                        <p className="font-semibold">{error_sistema}</p>
+                        <button onClick={() => set_error_sistema(null)} className="text-xl font-bold hover:text-gray-300">X</button>
+                    </div>
+                )}
+
                 <div className="flex flex-col lg:flex-row gap-8">
                     <section className="w-full lg:w-1/2 bg-gunmetal border border-iron-grey p-6 rounded-sm">
                         <h2 className="text-xl font-bold text-platinum mb-6">Inventario Disponible</h2>
-
                         {cargando ? (
                             <p className="text-pale-slate-dark">Cargando piezas</p>
                         ) : (
-                            <div className="flex flex-col space-y-3">
+                            <div className="flex flex-col space-y-3 max-h-[800px] overflow-y-auto pr-2">
                                 {catalogo_disponible.map((pieza) => (
                                     <div key={pieza.id} className="flex justify-between items-center bg-shadow-grey border border-iron-grey p-3">
                                         <div>
@@ -109,6 +179,7 @@ export default function MesaEnsamblaje() {
                                             <p className="text-xs text-pale-slate-dark uppercase tracking-wide">{pieza.category}</p>
                                         </div>
                                         <button
+                                            type="button"
                                             onClick={() => agregar_pieza(pieza)}
                                             className="bg-iron-grey hover:bg-slate-grey text-white text-sm font-bold py-1 px-4 transition-colors"
                                         >
@@ -121,20 +192,45 @@ export default function MesaEnsamblaje() {
                     </section>
 
                     <section className="w-full lg:w-1/2 bg-gunmetal border border-iron-grey p-6 rounded-sm flex flex-col">
-                        <h2 className="text-xl font-bold text-platinum mb-6">Proyecto Actual</h2>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-platinum">Proyecto Actual</h2>
+                            <button onClick={limpiar_proyecto} className="text-xs text-slate-grey hover:text-white uppercase tracking-widest font-bold border border-slate-grey px-2 py-1">
+                                Limpiar Mesa
+                            </button>
+                        </div>
 
                         <div className="flex-grow bg-shadow-grey border border-iron-grey p-4 mb-6 min-h-[300px] overflow-y-auto">
                             {piezas_proyecto.length === 0 ? (
                                 <p className="text-slate-grey text-center mt-10">No hay piezas en el proyecto.</p>
                             ) : (
-                                <ul className="space-y-2">
-                                    {piezas_proyecto.map((pieza, indice) => (
-                                        <li key={indice} className="text-pale-slate-light text-sm flex justify-between border-b border-iron-grey pb-1">
-                                            <span>{pieza.name}</span>
-                                            <span className="text-slate-grey">{pieza.current_draw_ma > 0 ? `${pieza.current_draw_ma} mA` : 'Cerebro'}</span>
-                                        </li>
+                                <div className="space-y-4">
+                                    {Object.keys(piezas_agrupadas).map((categoria) => (
+                                        <div key={categoria} className="mb-4">
+                                            <h4 className="text-xs uppercase tracking-widest font-bold text-slate-grey border-b border-iron-grey pb-1 mb-2">
+                                                {categoria} ({piezas_agrupadas[categoria].length})
+                                            </h4>
+                                            <ul className="space-y-1 pl-2 border-l-2 border-iron-grey">
+                                                {piezas_agrupadas[categoria].map((pieza, indice) => (
+                                                    <li key={indice} className="text-pale-slate-light text-sm flex justify-between py-1 items-center">
+                                                        <span>{pieza.name}</span>
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-slate-grey text-xs">
+                                                                {pieza.current_draw_ma > 0 ? `${pieza.current_draw_ma} mA` : 'Base'}
+                                                            </span>
+                                                            <button 
+                                                                type="button"
+                                                                onClick={() => quitar_pieza(pieza.id)}
+                                                                className="text-slate-grey hover:text-[#721c24] font-bold text-xs"
+                                                            >
+                                                                X
+                                                            </button>
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
                                     ))}
-                                </ul>
+                                </div>
                             )}
                         </div>
 
@@ -142,22 +238,24 @@ export default function MesaEnsamblaje() {
                             <h3 className="text-sm uppercase tracking-widest text-slate-grey font-bold mb-3 border-b border-iron-grey pb-2">Diagnostico del Sistema</h3>
                             
                             {resultado_validacion && (
-                                <div className="mb-4 space-y-2 text-sm text-pale-slate-dark bg-gunmetal p-3 border border-iron-grey">
-                                    <p className="flex justify-between">
-                                        <span className="font-semibold text-slate-grey uppercase tracking-wider text-xs">Cerebro Principal:</span> 
-                                        <span className="text-bright-snow font-medium">{resultado_validacion.brain_name}</span>
-                                    </p>
-                                    <p className="flex justify-between">
-                                        <span className="font-semibold text-slate-grey uppercase tracking-wider text-xs">Estado de Voltaje:</span> 
-                                        <span className={resultado_validacion.voltage_status === 'OK' ? 'text-green-500' : 'text-[#721c24] font-bold'}>
-                                            {resultado_validacion.voltage_status}
-                                        </span>
-                                    </p>
-                                    <p className="flex justify-between">
-                                        <span className="font-semibold text-slate-grey uppercase tracking-wider text-xs">Corriente Restante:</span> 
-                                        <span className="text-platinum">{resultado_validacion.remaining_ma} mA</span>
-                                    </p>
-                                </div>
+                                <>
+                                    <div className="mb-4 space-y-2 text-sm text-pale-slate-dark bg-gunmetal p-3 border border-iron-grey">
+                                        <p className="flex justify-between">
+                                            <span className="font-semibold text-slate-grey uppercase tracking-wider text-xs">Cerebro Principal:</span> 
+                                            <span className="text-bright-snow font-medium">{resultado_validacion.brain_name}</span>
+                                        </p>
+                                        <p className="flex justify-between">
+                                            <span className="font-semibold text-slate-grey uppercase tracking-wider text-xs">Corriente Restante:</span> 
+                                            <span className="text-platinum">{resultado_validacion.remaining_ma} mA</span>
+                                        </p>
+                                    </div>
+
+                                    <div className={`p-4 mb-4 border ${color_diagnostico}`}>
+                                        <p className={`font-semibold text-sm ${texto_diagnostico}`}>
+                                            {obtener_mensaje_humano(resultado_validacion.voltage_status, esta_sobrecargado)}
+                                        </p>
+                                    </div>
+                                </>
                             )}
 
                             <div className="w-full bg-gunmetal h-4 mb-2 border border-iron-grey">
@@ -170,25 +268,6 @@ export default function MesaEnsamblaje() {
                                 ></div>
                             </div>
                             
-                            {esta_sobrecargado && (
-                                <div className="mt-2 mb-2 p-2 bg-[#721c24] bg-opacity-20 border border-[#721c24]">
-                                    <p className="text-[#721c24] font-bold text-xs uppercase tracking-widest text-center">
-                                        PELIGRO: SOBRECARGA DETECTADA
-                                    </p>
-                                    <p className="text-pale-slate-light text-xs text-center mt-1">
-                                        El consumo excede el limite. Riesgo de quemar el componente.
-                                    </p>
-                                </div>
-                            )}
-
-                            {resultado_validacion?.is_critical_margin && !esta_sobrecargado && (
-                                <div className="mt-2 mb-2 p-2 bg-yellow-600 bg-opacity-20 border border-yellow-600">
-                                    <p className="text-yellow-500 font-bold text-xs uppercase tracking-widest text-center">
-                                        ADVERTENCIA: MARGEN CRITICO
-                                    </p>
-                                </div>
-                            )}
-                            
                             <p className="text-xs text-pale-slate-dark text-right mt-2">{consumo} mA / {suministro} mA Suministrados</p>
 
                             <button 
@@ -197,7 +276,7 @@ export default function MesaEnsamblaje() {
                                 disabled={procesando || piezas_proyecto.length === 0}
                                 className="w-full mt-4 bg-iron-grey hover:bg-slate-grey disabled:opacity-50 disabled:cursor-not-allowed text-bright-snow font-bold py-3 transition-colors"
                             >
-                                {procesando ? 'Procesando' : 'Validar Circuito en Backend'}
+                                {procesando ? 'Validando Base de Datos...' : 'Validar Circuito'}
                             </button>
                         </div>
                     </section>
