@@ -23,10 +23,10 @@ export default function RootLayout({
 
   return (
     <html lang="es">
-        <head>
-            <title>VolTron | Ingenieria</title>
-            <meta name="description" content="Plataforma de ensamblaje y validacion de circuitos" />
-        </head>
+      <head>
+        <title>VolTron | Ingenieria</title>
+        <meta name="description" content="Plataforma de ensamblaje y validacion de circuitos" />
+      </head>
       <body className="bg-shadow-grey text-bright-snow font-sans min-h-screen flex flex-col antialiased">
 
         <nav className="bg-gunmetal border-b border-iron-grey sticky top-0 z-50 shadow-sm">
@@ -49,26 +49,26 @@ export default function RootLayout({
               >
                 Mesa de Ensamblaje
               </Link>
-              
+
               <div className="flex items-center ml-4 pl-4 border-l border-iron-grey gap-4">
-                  {!token_sesion ? (
-                      <>
-                          <span className="text-xs font-bold text-slate-grey">[Modo Invitado]</span>
-                          <Link href="/auth/login" className="hover:text-bright-snow transition-colors">
-                              Entrar
-                          </Link>
-                          <Link href="/auth/registro" className="hover:text-bright-snow transition-colors">
-                              Crear Cuenta
-                          </Link>
-                      </>
-                  ) : (
-                      <>
-                          <span className="text-xs font-bold text-green-500">[Modo Ingeniero]</span>
-                          <button type="button" onClick={cerrar_sesion} className="hover:text-[#721c24] transition-colors font-bold">
-                              Cerrar Sesion
-                          </button>
-                      </>
-                  )}
+                {!token_sesion ? (
+                  <>
+                    <span className="text-xs font-bold text-slate-grey">[Modo Invitado]</span>
+                    <Link href="/auth/login" className="hover:text-bright-snow transition-colors">
+                      Entrar
+                    </Link>
+                    <Link href="/auth/registro" className="hover:text-bright-snow transition-colors">
+                      Crear Cuenta
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xs font-bold text-green-500">[Modo Ingeniero]</span>
+                    <button type="button" onClick={cerrar_sesion} className="hover:text-[#721c24] transition-colors font-bold">
+                      Cerrar Sesion
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
