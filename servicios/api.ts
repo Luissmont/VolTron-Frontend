@@ -13,7 +13,7 @@ export interface componente_catalogo {
 }
 
 export async function obtener_catalogo() {
-    const url_base = process.env.NEXT_PUBLIC_URL_API_BASE || process.env.url_api_base;
+    const url_base = process.env.NEXT_PUBLIC_URL_API_BASE;
 
     if (!url_base) {
         throw new Error('error critico: url de la api no esta configurada en el entorno');

@@ -1,5 +1,5 @@
 export async function crear_proyecto_vacio(nombre: string, descripcion: string) {
-    const url_base = process.env.url_api_base;
+    const url_base = process.env.NEXT_PUBLIC_URL_API_BASE;
     
     if (!url_base) {
         throw new Error("error critico: url de la api no definida");
@@ -25,7 +25,7 @@ export async function crear_proyecto_vacio(nombre: string, descripcion: string) 
 }
 
 export async function vincular_componente_a_proyecto(id_proyecto: string, id_componente: string) {
-    const url_base = process.env.url_api_base;
+    const url_base = process.env.NEXT_PUBLIC_URL_API_BASE;
     
     if (!url_base) {
         throw new Error("error critico: url de la api no definida");
@@ -50,7 +50,7 @@ export async function vincular_componente_a_proyecto(id_proyecto: string, id_com
 }
 
 export async function validar_proyecto(id_proyecto: string) {
-    const url_base = process.env.url_api_base;
+    const url_base = process.env.NEXT_PUBLIC_URL_API_BASE;
     
     if (!url_base) {
         throw new Error("error critico: url de la api no definida");
